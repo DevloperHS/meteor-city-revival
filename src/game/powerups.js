@@ -15,12 +15,17 @@ export const POWERUP_COLORS = {
 };
 
 export function maybeDropPowerup(impactPos, meteorScale) {
-  // Very rare: 3% base chance, only slightly boosted by meteor scale
-  const chance = 0.03 + (meteorScale - 1) * 0.02;
-  if (Math.random() > chance) return;
+  // Per-impact drop rates (independent rolls)
+  const infinityChance = 0.000001 / 100; // 0.000001%
+  const chargeChance = 0.001 / 100;      // 0.001%
 
-  // Infinity is extremely rare (10% of the already-rare drops)
-  const type = Math.random() < 0.1 ? 'infinity' : 'charge';
+  let type = null;
+  if (Math.random() < infinityChance) {
+    type = 'infinity';
+  } else if (Math.random() < chargeChance) {
+    type = 'charge';
+  }
+  if (!type) return;
 
   const geo = new THREE.IcosahedronGeometry(3, 1);
   const mat = new THREE.MeshStandardMaterial({

@@ -36,9 +36,13 @@ export const cityGlowLight2 = new THREE.PointLight(0xffaa55, 0.6, 500, 1.2);
 cityGlowLight2.position.set(0, 15, 0);
 scene.add(cityGlowLight2);
 
-// Fire light (will follow meteor / explosion)
+// Fire light (impact / explosion)
 export const fireLight = new THREE.PointLight(0xff5520, 0, 500, 1.5);
 scene.add(fireLight);
+
+// Meteor trail light (in-flight only - kept separate so impacts keep their glow)
+export const meteorLight = new THREE.PointLight(0xff6620, 0, 400, 1.5);
+scene.add(meteorLight);
 
 export const ambientFireLight = new THREE.PointLight(0xff6600, 0, 700, 1.0);
 ambientFireLight.position.set(0, 50, 0);

@@ -1,7 +1,11 @@
 import { Sound } from '../audio/sound.js';
 import { game } from './state.js';
 import { meteors, MAX_METEORS, TRAIL_COUNT, meteorPool } from '../effects/meteors.js';
-import { fireLight } from '../core/lighting.js';
+import { meteorLight } from '../core/lighting.js';
+import { GRID_SIZE, BLOCK_SIZE } from '../world/city.js';
+
+// City footprint in world units (matches procedural grid extent)
+const CITY_HALF = (GRID_SIZE / 2) * BLOCK_SIZE - BLOCK_SIZE * 0.15;
 
 export function launchMeteor(scale = 1) {
   Sound.init();
@@ -34,8 +38,9 @@ export function launchMeteor(scale = 1) {
     Math.sin(angle) * dist
   );
 
-  const targetX = (Math.random() - 0.5) * 60;
-  const targetZ = (Math.random() - 0.5) * 60;
+  // Random impact anywhere across the city, not just the center
+  const targetX = (Math.random() - 0.5) * 2 * CITY_HALF;
+  const targetZ = (Math.random() - 0.5) * 2 * CITY_HALF;
 
   m.vel.set(
     (targetX - m.pos.x) / 100,
@@ -45,7 +50,7 @@ export function launchMeteor(scale = 1) {
 
   m.group.position.copy(m.pos);
   m.group.visible = true;
-  fireLight.color.setHex(0xff6600);
+  meteorLight.color.setHex(0xff6600);
 
   // Reset trail
   for (let i = 0; i < TRAIL_COUNT; i++) m.trailAlphas[i] = 0;

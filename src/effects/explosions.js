@@ -123,3 +123,139 @@ const smokeMat = new THREE.ShaderMaterial({
 export const smoke = new THREE.Points(smokeGeo, smokeMat);
 scene.add(smoke);
 
+// Impact flare pool - visible bloom cloud scaled by meteor size
+export const MAX_IMPACT_FLARES = 12;
+export const impactFlares = [];
+
+function createImpactFlare() {
+  const group = new THREE.Group();
+
+  const corona = new THREE.Mesh(
+    new THREE.SphereGeometry(1, 16, 16),
+    new THREE.MeshBasicMaterial({
+      color: 0xffaa33,
+      transparent: true,
+      opacity: 0.45,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+    }),
+  );
+  group.add(corona);
+
+  const glow = new THREE.Mesh(
+    new THREE.SphereGeometry(1, 20, 20),
+    new THREE.MeshBasicMaterial({
+      color: 0xffee55,
+      transparent: true,
+      opacity: 0.85,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+    }),
+  );
+  group.add(glow);
+
+  const core = new THREE.Mesh(
+    new THREE.SphereGeometry(1, 20, 20),
+    new THREE.MeshBasicMaterial({
+      color: 0xffffff,
+      transparent: true,
+      opacity: 1,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+    }),
+  );
+  group.add(core);
+
+  group.visible = false;
+  scene.add(group);
+
+  return {
+    group,
+    core,
+    glow,
+    corona,
+    coreMat: core.material,
+    glowMat: glow.material,
+    coronaMat: corona.material,
+    active: false,
+    age: 0,
+    maxLife: 2.5,
+    meteorScale: 1,
+  };
+}
+
+for (let i = 0; i < MAX_IMPACT_FLARES; i++) {
+  impactFlares.push(createImpactFlare());
+}
+
+export function spawnImpactFlare(pos, meteorScale) {
+  let flare = impactFlares.find(f => !f.active);
+  if (!flare) {
+    flare = impactFlares.reduce((oldest, f) => (f.age > oldest.age ? f : oldest), impactFlares[0]);
+  }
+
+  const s = Math.max(0.5, meteorScale);
+  flare.meteorScale = s;
+  flare.maxLife = 2.2 + s * 0.9;
+  flare.age = 0;
+  flare.active = true;
+
+  flare.group.position.set(pos.x, Math.max(8, pos.y), pos.z);
+  flare.group.scale.setScalar(0.2 * s);
+  flare.group.visible = true;
+
+  flare.core.scale.setScalar(6 * s);
+  flare.glow.scale.setScalar(14 * s);
+  flare.corona.scale.setScalar(28 * s);
+
+  flare.coreMat.opacity = 1;
+  flare.glowMat.opacity = 0.9;
+  flare.coronaMat.opacity = 0.55;
+}
+
+export function updateImpactFlares(dt) {
+  for (const f of impactFlares) {
+    if (!f.active) continue;
+
+    f.age += dt;
+    const t = f.age / f.maxLife;
+    if (t >= 1) {
+      f.active = false;
+      f.group.visible = false;
+      continue;
+    }
+
+    const s = f.meteorScale;
+    // Fast bloom-out, then slow expansion (matches screenshot fireball feel)
+    const burst = t < 0.12 ? t / 0.12 : 1;
+    const expand = 0.25 + burst * 0.75 + t * 0.65;
+    f.group.scale.setScalar(expand * s);
+
+    const fade = (1 - t) * (1 - t);
+    f.coreMat.opacity = fade;
+    f.glowMat.opacity = fade * 0.9;
+    f.coronaMat.opacity = fade * 0.55 * (0.92 + Math.sin(f.age * 14) * 0.08);
+
+    // Warm shift as the flare cools
+    const heat = 1 - t * 0.7;
+    f.coreMat.color.setRGB(1, heat, heat * 0.35);
+    f.glowMat.color.setRGB(1, 0.78 + heat * 0.2, heat * 0.2);
+    f.coronaMat.color.setRGB(1, 0.55 + heat * 0.15, heat * 0.05);
+
+    f.group.position.y += dt * (1.5 + s * 1.2);
+    f.corona.rotation.y += dt * 0.6;
+    f.glow.rotation.y -= dt * 0.8;
+  }
+}
+
+export function clearImpactFlares() {
+  for (const f of impactFlares) {
+    f.active = false;
+    f.group.visible = false;
+  }
+}
+
+export function hasActiveImpactFlares() {
+  return impactFlares.some(f => f.active);
+}
+

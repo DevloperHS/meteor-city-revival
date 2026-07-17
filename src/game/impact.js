@@ -6,6 +6,7 @@ import {
   SMOKE_COUNT, smokePositions, smokeVelocities, smokeAlphas, smokeSizes, smokeGeo,
   shockwave, shockMat, shockwave2, shock2Mat,
   debrisGroup, debrisChunks,
+  spawnImpactFlare,
 } from '../effects/explosions.js';
 import { fireLight, ambientFireLight } from '../core/lighting.js';
 import { Sound } from '../audio/sound.js';
@@ -134,9 +135,12 @@ export function triggerImpact(m) {
   }
 
   fireLight.position.copy(impactPos);
-  fireLight.intensity = 25 * scale;
-  ambientFireLight.position.set(impactPos.x, 60, impactPos.z);
-  ambientFireLight.intensity = 5 * scale;
+  fireLight.intensity = 30 * scale;
+  ambientFireLight.position.copy(impactPos);
+  ambientFireLight.position.y += 20 * scale;
+  ambientFireLight.intensity = 8 * scale;
+
+  spawnImpactFlare(impactPos, scale);
 
   Sound.playImpact();
 

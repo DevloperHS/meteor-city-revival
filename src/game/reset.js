@@ -6,8 +6,9 @@ import {
   EXPLOSION_COUNT, expAlphas, explosionGeo,
   SMOKE_COUNT, smokeAlphas, smokeGeo,
   shockMat, shock2Mat,
+  clearImpactFlares,
 } from '../effects/explosions.js';
-import { fireLight, ambientFireLight } from '../core/lighting.js';
+import { fireLight, ambientFireLight, meteorLight } from '../core/lighting.js';
 import { clearPowerups } from './powerups.js';
 
 export function resetCity() {
@@ -56,6 +57,8 @@ export function resetCity() {
 
   fireLight.intensity = 0;
   ambientFireLight.intensity = 0;
+  meteorLight.intensity = 0;
+  clearImpactFlares();
 
   // Reset game
   game.clicks = 0;

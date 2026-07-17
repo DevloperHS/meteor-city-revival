@@ -1,12 +1,13 @@
 import * as THREE from 'three';
 import { composer, camera, controls } from '../core/setup.js';
-import { fireLight, ambientFireLight } from '../core/lighting.js';
+import { fireLight, ambientFireLight, meteorLight } from '../core/lighting.js';
 import { meteors, TRAIL_COUNT } from '../effects/meteors.js';
 import {
   EXPLOSION_COUNT, expAlphas, expPositions, expVelocities, expSizes, expColors, explosionGeo,
   SMOKE_COUNT, smokeAlphas, smokePositions, smokeVelocities, smokeSizes, smokeGeo,
   shockwave, shockMat, shockwave2, shock2Mat,
   debrisGroup, debrisChunks,
+  updateImpactFlares, hasActiveImpactFlares,
 } from '../effects/explosions.js';
 import { starMat } from '../world/stars.js';
 import { buildings } from '../world/city.js';
@@ -47,9 +48,9 @@ export function animate() {
     m.corona.rotation.y += 0.015;
     m.coronaMat.opacity = 0.2 + Math.sin(state.time * 8) * 0.08 + Math.min(0.15, speed * 0.02);
 
-    // Fire light follows the closest active meteor
-    fireLight.position.copy(m.pos);
-    fireLight.intensity = 8 + Math.sin(state.time * 15) * 2;
+    // In-flight light follows active meteors (impact uses fireLight separately)
+    meteorLight.position.copy(m.pos);
+    meteorLight.intensity = (6 + Math.sin(state.time * 15) * 2) * m.scale;
 
     // Trail - size scales with meteor scale for bigger meteors
     const idx = m.trailIndex % TRAIL_COUNT;
@@ -74,6 +75,11 @@ export function animate() {
       triggerImpact(m);
     }
   });
+
+  // Dim meteor light when none are active
+  if (!meteors.some(m => m.active)) {
+    meteorLight.intensity = Math.max(0, meteorLight.intensity - dt * 12);
+  }
 
   // ===== Explosion & smoke particles (always update if any alive) =====
   let anyExpAlive = false;
@@ -126,10 +132,13 @@ export function animate() {
     shock2Mat.opacity = Math.max(0, shock2Mat.opacity - dt * 0.25);
   }
 
-  // Fire light fade
+  // Impact flare clouds + fire light fade
+  updateImpactFlares(dt);
+
   if (fireLight.intensity > 0) {
-    fireLight.intensity = Math.max(0, fireLight.intensity - dt * 8);
-    ambientFireLight.intensity = Math.max(0, ambientFireLight.intensity - dt * 2);
+    const fadeRate = hasActiveImpactFlares() ? 2.5 : 8;
+    fireLight.intensity = Math.max(0, fireLight.intensity - dt * fadeRate);
+    ambientFireLight.intensity = Math.max(0, ambientFireLight.intensity - dt * (fadeRate * 0.35));
   }
 
   state.cameraShake = Math.max(0, state.cameraShake - dt * 60);
