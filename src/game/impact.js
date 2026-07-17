@@ -10,7 +10,10 @@ import {
 } from '../effects/explosions.js';
 import { fireLight, ambientFireLight } from '../core/lighting.js';
 import { Sound } from '../audio/sound.js';
-import { maybeDropPowerup } from './powerups.js';
+import { game } from './state.js';
+import { getSessionSeed, getImpactCount, recordImpact } from './session.js';
+import { regenDelaySeconds } from '../../shared/regenDelay.js';
+import { DESTROY_RADIUS } from '../../shared/constants.js';
 
 export function triggerImpact(m) {
   const scale = m.scale || 1;
@@ -72,7 +75,10 @@ export function triggerImpact(m) {
   shockwave2.scale.set(1, 1, 1);
   shock2Mat.opacity = 0.6;
 
-  const destroyRadius = 120 * scale;
+  const destroyRadius = DESTROY_RADIUS;
+  const sessionSeed = getSessionSeed();
+  const impactIndex = getImpactCount();
+
   buildings.forEach((building) => {
     if (!building.userData.destroyed && building.userData.originalPos) {
       const dx = building.position.x - impactPos.x;
@@ -84,7 +90,15 @@ export function triggerImpact(m) {
         building.userData.destroyed = true;
         building.userData.regenerating = false;
         building.userData.regenProgress = 0;
-        building.userData.regenDelay = 3 + Math.random() * 4; // seconds before regen starts
+        if (building.userData.layoutIndex !== undefined && sessionSeed != null) {
+          building.userData.regenDelay = regenDelaySeconds(
+            sessionSeed,
+            building.userData.layoutIndex,
+            impactIndex,
+          );
+        } else {
+          building.userData.regenDelay = 5 + Math.random() * 4;
+        }
 
         const dir = new THREE.Vector3(dx, 0, dz).normalize();
         building.userData.velocity.copy(dir).multiplyScalar(force * 5);
@@ -142,9 +156,10 @@ export function triggerImpact(m) {
 
   spawnImpactFlare(impactPos, scale);
 
-  Sound.playImpact();
+  if (sessionSeed != null) {
+    recordImpact({ t: game.elapsed, x: impactPos.x, z: impactPos.z });
+  }
 
-  // Maybe drop a powerup
-  maybeDropPowerup(impactPos, scale);
+  Sound.playImpact();
 }
 

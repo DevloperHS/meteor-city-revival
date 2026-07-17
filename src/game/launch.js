@@ -2,15 +2,13 @@ import { Sound } from '../audio/sound.js';
 import { game } from './state.js';
 import { meteors, MAX_METEORS, TRAIL_COUNT, meteorPool } from '../effects/meteors.js';
 import { meteorLight } from '../core/lighting.js';
-import { GRID_SIZE, BLOCK_SIZE } from '../world/city.js';
+import { GRID_SIZE, BLOCK_SIZE } from '../../shared/constants.js';
 
-// City footprint in world units (matches procedural grid extent)
 const CITY_HALF = (GRID_SIZE / 2) * BLOCK_SIZE - BLOCK_SIZE * 0.15;
 
-export function launchMeteor(scale = 1) {
+export function launchMeteor() {
   Sound.init();
 
-  // Start game timer on first click
   if (!game.started) {
     game.started = true;
     game.startTime = performance.now();
@@ -18,17 +16,16 @@ export function launchMeteor(scale = 1) {
   if (game.won) return;
   game.clicks++;
 
-  // Find a free meteor from the pool
   let m = null;
   for (let i = 0; i < MAX_METEORS; i++) {
     meteorPool.idx = (meteorPool.idx + 1) % MAX_METEORS;
     if (!meteors[meteorPool.idx].active) { m = meteors[meteorPool.idx]; break; }
   }
-  if (!m) { m = meteors[meteorPool.idx]; } // overwrite oldest if all busy
+  if (!m) { m = meteors[meteorPool.idx]; }
 
   m.active = true;
-  m.scale = scale;
-  m.group.scale.set(scale, scale, scale);
+  m.scale = 1;
+  m.group.scale.set(1, 1, 1);
 
   const angle = Math.random() * Math.PI * 2;
   const dist = 300 + Math.random() * 200;
@@ -38,7 +35,6 @@ export function launchMeteor(scale = 1) {
     Math.sin(angle) * dist
   );
 
-  // Random impact anywhere across the city, not just the center
   const targetX = (Math.random() - 0.5) * 2 * CITY_HALF;
   const targetZ = (Math.random() - 0.5) * 2 * CITY_HALF;
 
@@ -52,10 +48,8 @@ export function launchMeteor(scale = 1) {
   m.group.visible = true;
   meteorLight.color.setHex(0xff6600);
 
-  // Reset trail
   for (let i = 0; i < TRAIL_COUNT; i++) m.trailAlphas[i] = 0;
   m.trailGeo.attributes.alpha.needsUpdate = true;
 
   Sound.playMeteor();
 }
-

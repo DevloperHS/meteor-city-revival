@@ -1,6 +1,7 @@
 import { meteors, TRAIL_COUNT } from '../effects/meteors.js';
-import { state, game } from './state.js';
+import { state, game, resetWinState } from './state.js';
 import { buildings } from '../world/city.js';
+import { clearSessionImpacts } from './session.js';
 import {
   debrisGroup, debrisChunks,
   EXPLOSION_COUNT, expAlphas, explosionGeo,
@@ -9,10 +10,8 @@ import {
   clearImpactFlares,
 } from '../effects/explosions.js';
 import { fireLight, ambientFireLight, meteorLight } from '../core/lighting.js';
-import { clearPowerups } from './powerups.js';
 
 export function resetCity() {
-  // Reset all meteors
   meteors.forEach(m => {
     m.active = false;
     m.group.visible = false;
@@ -32,7 +31,6 @@ export function resetCity() {
       building.userData.regenProgress = 0;
       building.userData.velocity.set(0, 0, 0);
       building.userData.angularVelocity.set(0, 0, 0);
-      // Restore window lights
       if (building.material && building.material.emissiveIntensity !== undefined && building.userData.baseEmissive !== undefined) {
         building.material.emissiveIntensity = building.userData.baseEmissive;
       }
@@ -60,18 +58,11 @@ export function resetCity() {
   meteorLight.intensity = 0;
   clearImpactFlares();
 
-  // Reset game
   game.clicks = 0;
   game.started = false;
-  game.won = false;
+  resetWinState();
   game.startTime = 0;
+  clearSessionImpacts();
   game.totalBuildings = buildings.filter(b => b.userData.originalPos).length;
-  game.powerups.charge = 0;
-  game.powerups.infinity = 0;
-  game.charging = false;
-  game.chargeLevel = 0;
-  clearPowerups();
   document.getElementById('win-overlay').classList.add('hidden');
-  document.getElementById('launch-btn').textContent = '🔥 Launch Meteor';
 }
-

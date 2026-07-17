@@ -5,15 +5,17 @@
 > A browser-based 3D destruction game built with **Three.js** and **Vite**.  
 > Rain meteors on a procedural city, but the skyline fights back.
 
+**Play:** [meteor-city-revival.vercel.app](https://meteor-city-revival.vercel.app)
+
 ---
 
 ## Intro
 
 **Meteor Impact (Revival)** drops you above a procedurally generated city sleeping under moonlight. Your mission is simple to describe and brutal to execute: **destroy every building at once**.
 
-Each impact sends towers tumbling, lights flickering out, and shockwaves rippling across the streets. The catch? **The city regenerates.** Knocked-down buildings rebuild after a short delay, scaling back up from the ground. You win only when **100% destruction** is achieved in a single moment before the skyline heals itself.
+Each impact sends towers tumbling, lights flickering out, and shockwaves rippling across the streets. The catch? **The city regenerates.** Knocked-down buildings rebuild after a delay, scaling back up from the ground. You win only when **100% destruction** is achieved in a single moment before the skyline heals itself.
 
-Collect rare powerups from impacts to charge colossal meteors or unleash a synchronized barrage. Orbit the carnage, switch to cinematic camera mode, and chase your best time and launch count.
+There are no powerups. Every meteor is the same size. Winning is a timing puzzle: cover the whole map, spam fast, and sync a final wave before regen catches up. Orbit the carnage, switch to cinematic camera mode, and chase your best time and launch count.
 
 ---
 
@@ -36,6 +38,8 @@ npm run dev
 
 Open the URL shown in your terminal, click **Start** on the intro screen, and begin launching meteors.
 
+The dev server includes local API routes for game sessions (`/api/game/start`, `/api/game/verify`). Wins are verified server-side in dev without extra setup.
+
 ### Production Build
 
 ```bash
@@ -46,29 +50,52 @@ npm run build
 npm run preview
 ```
 
-The `dist/` folder can be deployed to any static host (Netlify, Vercel, GitHub Pages, etc.).
+Deploy to [Vercel](https://vercel.com/) (recommended) or any static host. API routes live in `api/` and deploy as serverless functions alongside the Vite build.
+
+### Environment Variables (Production)
+
+Set this on Vercel (or your host) for signed game sessions and win verification:
+
+| Variable | Purpose |
+|---|---|
+| `GAME_SESSION_SECRET` | HMAC secret for session tokens. Use a long random string. Without it, a dev fallback is used (not safe for production). |
 
 ---
 
-## Features & Powerups
+## Features
 
 ### Gameplay
 
 | | |
 |---|---|
 | **Objective** | Achieve **100% building destruction** simultaneously |
-| **Challenge** | Destroyed buildings **regenerate** after 3–7 seconds and regrow in ~2 seconds |
+| **Challenge** | Destroyed buildings **regenerate** after **5–9 seconds**, then regrow in **~2.2 seconds** |
+| **Blast radius** | **135** units per meteor (fixed) |
+| **Meteors in flight** | Up to **14** at once |
+| **City size** | ~**650** buildings per seeded layout (trees are decorative only) |
 | **HUD** | Live stats for clicks, elapsed time, and destruction percentage |
-| **Win screen** | Records your completion time and total meteor launches |
+| **Win screen** | Shown only after **server-verified** replay of your impact log |
+
+High destruction (85–95%) in the first 15 seconds is normal when spamming meteors across the map. **Clearing** the city (100% at once) is much harder and requires covering the full map before early hits start regenerating.
+
+### Win Verification
+
+Wins are not trusted from the browser alone. The flow:
+
+1. **Start** — server issues a signed token and city seed.
+2. **Play** — the client logs each impact `{ time, x, z }` against that seed.
+3. **100% reached** — the client sends the log to the server, which replays the simulation and confirms a legitimate wipe.
+
+DOM or console tricks cannot grant a win without passing server replay.
 
 ### World & Visuals
 
-- **Procedural city**: varied block layouts, building heights, parks, and lit windows
+- **Procedural city**: seeded grid layout with varied building heights, parks, and lit windows
 - **Night atmosphere**: exponential fog, starfield, ACES filmic tone mapping
-- **Impact effects**: particle explosions, smoke plumes, dual shockwaves, flying debris
+- **Impact effects**: particle explosions, smoke plumes, dual shockwaves, size-scaled impact flares, flying debris
 - **Post-processing**: Unreal Bloom and FXAA for a cinematic glow
-- **Camera shake**: scales with meteor size and impact intensity
-- **Mobile optimized**: touch controls, reduced bloom resolution, and adaptive rendering
+- **Camera shake**: scales with impact intensity
+- **Mobile optimized**: stacked touch controls, safe-area padding, reduced bloom resolution, adaptive rendering
 
 ### Controls
 
@@ -79,8 +106,6 @@ The `dist/` folder can be deployed to any static host (Netlify, Vercel, GitHub P
 | Orbit camera | Click & drag |
 | Zoom | Scroll wheel |
 | Launch meteor | **Space** or **Launch Meteor** button |
-| Hold to charge *(with Charge powerup)* | Hold **Space** or hold **Launch Meteor** |
-| Activate Infinity | **I** or **∞ Infinity** button |
 | Reset game | **R** or **Reset Game** button |
 | Cinematic camera | **C** or **Cinematic View** button |
 
@@ -90,31 +115,13 @@ The `dist/` folder can be deployed to any static host (Netlify, Vercel, GitHub P
 |---|---|
 | Orbit camera | Drag |
 | Zoom | Pinch |
-| Launch meteor | Tap **Launch Meteor** |
-| Hold to charge | Hold **Launch Meteor** |
+| Launch meteor | Tap **Launch** |
 
 > After ~8 seconds of inactivity, the camera gently auto-orbits the city.
 
 ### Audio
 
-Procedural sound effects powered by the **Web Audio API**: meteor whoosh, impact booms, and powerup chimes. Audio initializes when you press **Start** (browser autoplay policy).
-
----
-
-### Powerups
-
-Powerups appear as glowing orbs after meteor impacts. They float upward and are **auto-collected** when they rise high enough or expire (~6 seconds).
-
-| Powerup | Icon | Drop rate | Effect |
-|---|---|---|---|
-| **Charge** | ⚡ | ~3% per impact *(+ slight boost from larger meteors)* | Hold **Launch Meteor** to charge over **1.5 seconds**, then release for a meteor up to **~3.5×** normal size. Consumes one Charge stock per charged launch. |
-| **Infinity** | ∞ | ~0.3% per impact *(10% of all powerup drops)* | Instantly launches **5 mega meteors** (3.5× scale) in a staggered barrage. Consumes one Infinity stock per activation. |
-
-#### Powerup tips
-
-- Without a Charge powerup, tapping **Launch Meteor** fires a standard meteor immediately.
-- Larger meteors destroy buildings in a wider radius and slightly improve powerup drop odds.
-- Powerup counts are shown on the bottom control bar and reset when you start a new game.
+Procedural sound effects powered by the **Web Audio API**: meteor whoosh and impact booms. Audio initializes when you press **Start** (browser autoplay policy).
 
 ---
 
@@ -126,6 +133,8 @@ Powerups appear as glowing orbs after meteor impacts. They float upward and are 
 | Build tool | [Vite](https://vitejs.dev/) 5 |
 | Language | JavaScript (ES modules) |
 | Audio | Web Audio API (procedural synthesis) |
+| Backend | Vercel serverless (`api/game/*`) |
+| Shared sim | `shared/` (seeded RNG, city layout, impact replay) |
 
 ---
 

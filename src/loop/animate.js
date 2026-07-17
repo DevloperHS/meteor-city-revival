@@ -13,7 +13,6 @@ import { starMat } from '../world/stars.js';
 import { buildings } from '../world/city.js';
 import { game, state } from '../game/state.js';
 import { triggerImpact } from '../game/impact.js';
-import { updatePowerups } from '../game/powerups.js';
 import { updateGameUI } from '../ui/hud.js';
 
 const clock = new THREE.Clock();
@@ -193,7 +192,7 @@ export function animate() {
       }
     } else if (building.userData.regenerating) {
       // Grow back from ground
-      building.userData.regenProgress += dt * 0.5; // ~2 seconds to regrow
+      building.userData.regenProgress += dt * 0.45; // ~2.2 seconds to regrow
       const p = Math.min(1, building.userData.regenProgress);
       // Ease-out
       const s = 1 - Math.pow(1 - p, 3);
@@ -270,9 +269,6 @@ export function animate() {
   } else {
     controls.update();
   }
-
-  // ===== Powerups =====
-  updatePowerups(dt);
 
   // ===== Game state & UI =====
   updateGameUI();

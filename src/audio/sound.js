@@ -83,23 +83,4 @@ export const Sound = {
     crash.connect(cf).connect(cg).connect(this.master);
     crash.start(t); crash.stop(t + 0.8);
   },
-
-  playPowerup() {
-    if (!this.ctx) return;
-    const t = this.ctx.currentTime;
-    // Ascending arpeggio
-    const notes = [523, 659, 784, 1047]; // C5 E5 G5 C6
-    notes.forEach((freq, i) => {
-      const osc = this.ctx.createOscillator();
-      const g = this.ctx.createGain();
-      osc.type = 'triangle';
-      osc.frequency.value = freq;
-      const start = t + i * 0.08;
-      g.gain.setValueAtTime(0.001, start);
-      g.gain.exponentialRampToValueAtTime(0.2, start + 0.02);
-      g.gain.exponentialRampToValueAtTime(0.001, start + 0.3);
-      osc.connect(g).connect(this.master);
-      osc.start(start); osc.stop(start + 0.3);
-    });
-  },
 };

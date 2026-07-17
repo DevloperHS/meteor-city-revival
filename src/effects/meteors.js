@@ -3,7 +3,7 @@ import { scene } from '../core/setup.js';
 import { trailVertexShader, trailFragmentShader, createParticleTexture } from './shaders.js';
 
 export const TRAIL_COUNT = 300;
-export const MAX_METEORS = 12;
+export const MAX_METEORS = 14;
 export const meteors = [];
 export const meteorPool = { idx: 0 };
 
