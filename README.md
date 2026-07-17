@@ -1,5 +1,7 @@
 # ☄ Meteor Impact (Revival)
 
+![Meteor Impact (Revival) landing screen](assets/landing-screen.png)
+
 > A browser-based 3D destruction game built with **Three.js** and **Vite**.  
 > Rain meteors on a procedural city, but the skyline fights back.
 
