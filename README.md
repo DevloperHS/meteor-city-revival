@@ -38,7 +38,7 @@ npm run dev
 
 Open the URL shown in your terminal, click **Start** on the intro screen, and begin launching meteors.
 
-The dev server includes local API routes for game sessions (`/api/game/start`, `/api/game/verify`). Wins are verified server-side in dev without extra setup.
+The dev server includes local API routes for game sessions (`/api/start`, `/api/verify`). Wins are verified server-side in dev without extra setup.
 
 ### Production Build
 

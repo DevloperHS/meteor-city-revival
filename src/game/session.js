@@ -1,4 +1,6 @@
-const START_TIMEOUT_MS = 12000;
+const START_TIMEOUT_MS = 5000;
+const API_START = '/api/start';
+const API_VERIFY = '/api/verify';
 
 let session = {
   token: null,
@@ -26,12 +28,18 @@ export function recordImpact(impact) {
   });
 }
 
+function localFallbackSession() {
+  const seed = Math.floor(Math.random() * 2147483645) + 1;
+  session = { token: null, seed, impacts: [] };
+  return { seed, offline: true };
+}
+
 export async function startSession() {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), START_TIMEOUT_MS);
 
   try {
-    const res = await fetch('/api/game/start', {
+    const res = await fetch(API_START, {
       method: 'POST',
       signal: controller.signal,
     });
@@ -40,6 +48,9 @@ export async function startSession() {
     if (!data?.token || !data?.seed) throw new Error('Invalid session response');
     session = { token: data.token, seed: data.seed, impacts: [] };
     return data;
+  } catch (err) {
+    console.warn('Session API unavailable, using offline seed', err);
+    return localFallbackSession();
   } finally {
     clearTimeout(timeout);
   }
@@ -47,10 +58,10 @@ export async function startSession() {
 
 export async function submitWinVerification(clicks) {
   if (!session.token) {
-    return { verified: false, reason: 'no_session' };
+    return { verified: false, reason: 'offline_session' };
   }
 
-  const res = await fetch('/api/game/verify', {
+  const res = await fetch(API_VERIFY, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({

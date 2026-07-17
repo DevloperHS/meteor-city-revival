@@ -10,36 +10,38 @@ function readBody(req) {
   });
 }
 
+function sendJson(res, status, payload) {
+  res.statusCode = status;
+  res.setHeader('Content-Type', 'application/json');
+  res.end(JSON.stringify(payload));
+}
+
 export default defineConfig({
   plugins: [{
     name: 'game-api-dev',
     configureServer(server) {
       server.middlewares.use(async (req, res, next) => {
-        if (req.url === '/api/game/start' && req.method === 'POST') {
+        const path = req.url?.split('?')[0];
+
+        if (path === '/api/start' && req.method === 'POST') {
           try {
-            const data = handleStartGame();
-            res.setHeader('Content-Type', 'application/json');
-            res.end(JSON.stringify(data));
+            sendJson(res, 200, handleStartGame());
           } catch (err) {
-            console.error('game/start', err);
-            res.statusCode = 500;
-            res.end(JSON.stringify({ error: 'start_failed' }));
+            console.error('api/start', err);
+            sendJson(res, 500, { error: 'start_failed' });
           }
           return;
         }
 
-        if (req.url === '/api/game/verify' && req.method === 'POST') {
+        if (path === '/api/verify' && req.method === 'POST') {
           try {
             const raw = await readBody(req);
             const body = JSON.parse(raw || '{}');
             const result = handleVerifyWin(body);
-            res.statusCode = result.verified ? 200 : 403;
-            res.setHeader('Content-Type', 'application/json');
-            res.end(JSON.stringify(result));
+            sendJson(res, result.verified ? 200 : 403, result);
           } catch (err) {
-            console.error('game/verify', err);
-            res.statusCode = 500;
-            res.end(JSON.stringify({ verified: false, reason: 'server_error' }));
+            console.error('api/verify', err);
+            sendJson(res, 500, { verified: false, reason: 'server_error' });
           }
           return;
         }
