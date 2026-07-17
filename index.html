@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Meteor Impact (Revival)</title>
+</head>
+<body>
+
+<div id="loading">INITIALIZING CITY...</div>
+
+<div id="intro-screen">
+  <div class="intro-card">
+    <h1>Meteor Impact</h1>
+    <div class="subtitle">Revival</div>
+    <p class="desc">
+      A procedural city sleeps under the moonlight. Launch meteors to rain destruction upon it -
+      but the city <strong>regenerates</strong>. Destroy <strong>100%</strong> of the buildings
+      simultaneously to win before they rebuild.<br><br>
+      Collect rare powerups: <strong>⚡ Charge</strong> to hold-and-release bigger meteors,
+      or <strong>∞ Infinity</strong> to unleash a barrage of five mega impacts.
+    </p>
+    <button class="start-btn" id="start-btn">Start</button>
+    <div class="intro-hint" id="intro-hint">Click & drag to orbit · Scroll to zoom · Space to launch</div>
+  </div>
+</div>
+
+<div id="ui">
+  <div id="title-bar">
+    <h1>☄ Meteor Impact (Revival)</h1>
+  </div>
+</div>
+
+<div id="stats"></div>
+
+<div id="game-hud"></div>
+
+<div id="win-overlay" class="hidden">
+  <div class="win-card">
+    <h2>Annihilation</h2>
+    <p class="win-quote">"Now I am become Death, the destroyer of worlds."</p>
+    <div class="win-stats">
+      Time: <span id="win-time">0.0s</span><br>
+      Meteor Launches: <span id="win-clicks">0</span>
+    </div>
+    <button class="btn primary" id="win-restart-btn">Play Again</button>
+  </div>
+</div>
+
+<div id="controls">
+  <button class="btn primary" id="launch-btn">🔥 Launch Meteor</button>
+  <button class="powerup-btn charge" id="charge-btn" disabled>⚡ Charge <span class="powerup-count" id="charge-count">0</span></button>
+  <button class="powerup-btn infinity" id="infinity-btn" disabled>∞ Infinity <span class="powerup-count" id="infinity-count">0</span></button>
+  <button class="btn" id="reset-btn">Reset Game</button>
+  <button class="btn" id="view-btn">Cinematic View</button>
+</div>
+
+<div id="charge-bar-container">
+  <div id="charge-bar-fill"></div>
+</div>
+
+<div id="flash-msg"></div>
+
+<script type="module" src="/src/main.js"></script>
+</body>
+</html>
