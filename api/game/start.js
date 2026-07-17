@@ -1,17 +1,21 @@
 import { handleStartGame } from '../../server/handlers.js';
 
-export default async function handler(req) {
+export const config = {
+  runtime: 'nodejs',
+};
+
+export default async function handler(req, res) {
   if (req.method !== 'POST') {
-    return new Response('Method Not Allowed', { status: 405 });
+    res.setHeader('Allow', 'POST');
+    return res.status(405).json({ error: 'Method Not Allowed' });
   }
 
   try {
     const data = handleStartGame();
-    return Response.json(data, {
-      headers: { 'Cache-Control': 'no-store' },
-    });
+    res.setHeader('Cache-Control', 'no-store');
+    return res.status(200).json(data);
   } catch (err) {
     console.error('game/start', err);
-    return Response.json({ error: 'start_failed' }, { status: 500 });
+    return res.status(500).json({ error: 'start_failed' });
   }
 }

@@ -33,6 +33,12 @@ if (isMobile) {
   document.getElementById('view-btn').textContent = 'Cinematic';
 }
 
+function waitForPaint() {
+  return new Promise((resolve) => {
+    requestAnimationFrame(() => requestAnimationFrame(resolve));
+  });
+}
+
 const startBtn = document.getElementById('start-btn');
 startBtn.addEventListener('click', async () => {
   Sound.init();
@@ -42,6 +48,8 @@ startBtn.addEventListener('click', async () => {
 
   try {
     const session = await startSession();
+    startBtn.textContent = 'Building city…';
+    await waitForPaint();
     generateCity(session.seed);
     game.totalBuildings = buildings.filter(b => b.userData.originalPos).length;
     clearSessionImpacts();

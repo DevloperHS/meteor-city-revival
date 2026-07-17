@@ -1,3 +1,5 @@
+const START_TIMEOUT_MS = 12000;
+
 let session = {
   token: null,
   seed: null,
@@ -25,14 +27,29 @@ export function recordImpact(impact) {
 }
 
 export async function startSession() {
-  const res = await fetch('/api/game/start', { method: 'POST' });
-  if (!res.ok) throw new Error('Failed to start game session');
-  const data = await res.json();
-  session = { token: data.token, seed: data.seed, impacts: [] };
-  return data;
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), START_TIMEOUT_MS);
+
+  try {
+    const res = await fetch('/api/game/start', {
+      method: 'POST',
+      signal: controller.signal,
+    });
+    if (!res.ok) throw new Error(`Failed to start game session (${res.status})`);
+    const data = await res.json();
+    if (!data?.token || !data?.seed) throw new Error('Invalid session response');
+    session = { token: data.token, seed: data.seed, impacts: [] };
+    return data;
+  } finally {
+    clearTimeout(timeout);
+  }
 }
 
 export async function submitWinVerification(clicks) {
+  if (!session.token) {
+    return { verified: false, reason: 'no_session' };
+  }
+
   const res = await fetch('/api/game/verify', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },

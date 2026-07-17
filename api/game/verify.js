@@ -1,20 +1,22 @@
 import { handleVerifyWin } from '../../server/handlers.js';
 
-export default async function handler(req) {
+export const config = {
+  runtime: 'nodejs',
+};
+
+export default async function handler(req, res) {
   if (req.method !== 'POST') {
-    return new Response('Method Not Allowed', { status: 405 });
+    res.setHeader('Allow', 'POST');
+    return res.status(405).json({ error: 'Method Not Allowed' });
   }
 
   try {
-    const body = await req.json();
+    const body = req.body ?? {};
     const result = handleVerifyWin(body);
-    const status = result.verified ? 200 : 403;
-    return Response.json(result, {
-      status,
-      headers: { 'Cache-Control': 'no-store' },
-    });
+    res.setHeader('Cache-Control', 'no-store');
+    return res.status(result.verified ? 200 : 403).json(result);
   } catch (err) {
     console.error('game/verify', err);
-    return Response.json({ verified: false, reason: 'server_error' }, { status: 500 });
+    return res.status(500).json({ verified: false, reason: 'server_error' });
   }
 }
